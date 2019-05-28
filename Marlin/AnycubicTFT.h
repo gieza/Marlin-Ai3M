@@ -31,6 +31,18 @@ char *itostr3(const int);
 char *ftostr32(const float &);
 #endif
 
+#ifdef ANYCUBIC_TFT_DEBUG
+	#define ANYCUBIC_TFT_DEBUG_ECHOLNPGM(x)			          SERIAL_PROTOCOLLNPGM(x)
+  #define ANYCUBIC_TFT_DEBUG_ECHOPAIR(name, value)	    SERIAL_PROTOCOLPAIR(name, value)
+  #define ANYCUBIC_TFT_DEBUG_ECHOLNPAIR(name, value)	  SERIAL_PROTOCOLLNPAIR(name, value)
+  #define ANYCUBIC_TFT_DEBUG_ECHO(x)                    SERIAL_PROTOCOL(x)
+#else
+	#define ANYCUBIC_TFT_DEBUG_ECHOLNPGM(x)
+  #define ANYCUBIC_TFT_DEBUG_ECHOPAIR(name, value)
+  #define ANYCUBIC_TFT_DEBUG_ECHOLNPAIR(name, value)
+  #define ANYCUBIC_TFT_DEBUG_ECHO(x)
+#endif
+
 #define TFTBUFSIZE 4
 #define TFT_MAX_CMD_SIZE 96
 #define MSG_MY_VERSION "V116"
