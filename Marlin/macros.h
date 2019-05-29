@@ -72,7 +72,7 @@
 // Macros for bit masks
 #undef _BV
 #define _BV(b) (1 << (b))
-#define TEST(n,b) !!((n)&_BV(b))
+#define TEST(n,b) (((n)&_BV(b))!=0)
 #define SBI(n,b) (n |= _BV(b))
 #define CBI(n,b) (n &= ~_BV(b))
 #define SET_BIT_TO(N,B,TF) do{ if (TF) SBI(N,B); else CBI(N,B); }while(0)
