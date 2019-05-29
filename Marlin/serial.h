@@ -42,7 +42,8 @@ extern const char echomagic[] PROGMEM;
 extern const char errormagic[] PROGMEM;
 
 #define SERIAL_CHAR(x) ((void)MYSERIAL0.write(x))
-#define SERIAL_EOL() SERIAL_CHAR('\n')
+//#define SERIAL_EOL() SERIAL_CHAR('\n')
+#define SERIAL_EOL() MYSERIAL0.println()
 
 #define SERIAL_PRINT(x,b)      MYSERIAL0.print(x,b)
 #define SERIAL_PRINTLN(x,b)    MYSERIAL0.println(x,b)
@@ -57,10 +58,10 @@ extern const char errormagic[] PROGMEM;
 #define SERIAL_PROTOCOL(x)                  MYSERIAL0.print(x)
 #define SERIAL_PROTOCOL_F(x,y)              MYSERIAL0.print(x,y)
 #define SERIAL_PROTOCOLPGM(x)               serialprintPGM(PSTR(x))
-#define SERIAL_PROTOCOLLN(x)                do{ MYSERIAL0.print(x); SERIAL_EOL(); }while(0)
+#define SERIAL_PROTOCOLLN(x)                MYSERIAL0.println(x)
 #define SERIAL_PROTOCOLLNPGM(x)             serialprintPGM(PSTR(x "\n"))
 #define SERIAL_PROTOCOLPAIR(name, value)    serial_echopair_PGM(PSTR(name),(value))
-#define SERIAL_PROTOCOLLNPAIR(name, value)  do{ SERIAL_PROTOCOLPAIR(name, value); SERIAL_EOL(); }while(0)
+#define SERIAL_PROTOCOLLNPAIR(name, value)  { SERIAL_PROTOCOLPAIR(name, value); SERIAL_EOL(); }
 
 #define SERIAL_ECHO_START()            serialprintPGM(echomagic)
 #define SERIAL_ECHO(x)                 SERIAL_PROTOCOL(x)

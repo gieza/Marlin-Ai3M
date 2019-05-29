@@ -111,13 +111,13 @@ extern void serialEventRun(void) __attribute__((weak));
 #define ANYCUBIC_SERIAL_PROTOCOL(x) (AnycubicSerial.print(x))
 #define ANYCUBIC_SERIAL_PROTOCOL_F(x,y) (AnycubicSerial.print(x,y))
 #define ANYCUBIC_SERIAL_PROTOCOLPGM(x) (AnycubicSerialprintPGM(PSTR(x)))
+#define ANYCUBIC_SERIAL_ENTER() (AnycubicSerial.write('\r'), AnycubicSerial.write('\n'))
 #define ANYCUBIC_SERIAL_(x) (AnycubicSerial.print(x),AnycubicSerial.write('\n'))
-#define ANYCUBIC_SERIAL_PROTOCOLLN(x) (AnycubicSerial.print(x),AnycubicSerial.write('\r'),AnycubicSerial.write('\n'))
-#define ANYCUBIC_SERIAL_PROTOCOLLNPGM(x) (AnycubicSerialprintPGM(PSTR(x)),AnycubicSerial.write('\r'),AnycubicSerial.write('\n'))
+#define ANYCUBIC_SERIAL_PROTOCOLLN(x) (AnycubicSerial.print(x), ANYCUBIC_SERIAL_ENTER())
+#define ANYCUBIC_SERIAL_PROTOCOLLNPGM(x) (AnycubicSerialprintPGM(PSTR(x "\r\n")))
 
-#define ANYCUBIC_SERIAL_START() (AnycubicSerial.write('\r'),AnycubicSerial.write('\n'))
-#define ANYCUBIC_SERIAL_CMD_SEND(x) (AnycubicSerialprintPGM(PSTR(x)),AnycubicSerial.write('\r'),AnycubicSerial.write('\n'))
-#define ANYCUBIC_SERIAL_ENTER() (AnycubicSerial.write('\r'),AnycubicSerial.write('\n'))
+#define ANYCUBIC_SERIAL_START() ANYCUBIC_SERIAL_ENTER()
+#define ANYCUBIC_SERIAL_CMD_SEND(x) (AnycubicSerialprintPGM(PSTR(x "\r\n")))
 #define ANYCUBIC_SERIAL_SPACE() (AnycubicSerial.write(' '))
 
 const char newErr[] PROGMEM ="ERR ";

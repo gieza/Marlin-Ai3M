@@ -346,52 +346,52 @@ bool AnycubicTFTClass::CodeSeen(char code)
 
 void AnycubicTFTClass::HandleSpecialMenu()
 {
-  if(strcmp(SelectedDirectory, "<special menu>")==0) {
+  if(strcmp_P(SelectedDirectory, PSTR("<special menu>"))==0) {
     SpecialMenu=true;
-  } else if (strcmp(SelectedDirectory, "<auto tune hotend pid>")==0) {
+  } else if (strcmp_P(SelectedDirectory, PSTR("<auto tune hotend pid>"))==0) {
     SERIAL_PROTOCOLLNPGM("Special Menu: Auto Tune Hotend PID");
     enqueue_and_echo_commands_P(PSTR("M106 S204\nM303 E0 S210 C15 U1"));
-  } else if (strcmp(SelectedDirectory, "<auto tune hotbed pid>")==0) {
+  } else if (strcmp_P(SelectedDirectory, PSTR("<auto tune hotbed pid>"))==0) {
     SERIAL_PROTOCOLLNPGM("Special Menu: Auto Tune Hotbed Pid");
     enqueue_and_echo_commands_P(PSTR("M303 E-1 S60 C6 U1"));
-  } else if (strcmp(SelectedDirectory, "<save eeprom>")==0) {
+  } else if (strcmp_P(SelectedDirectory, PSTR("<save eeprom>"))==0) {
     SERIAL_PROTOCOLLNPGM("Special Menu: Save EEPROM");
     enqueue_and_echo_commands_P(PSTR("M500"));
     buzzer.tone(105, 1108);
     buzzer.tone(210, 1661);
-  } else if (strcmp(SelectedDirectory, "<load fw defaults>")==0) {
+  } else if (strcmp_P(SelectedDirectory, PSTR("<load fw defaults>"))==0) {
     SERIAL_PROTOCOLLNPGM("Special Menu: Load FW Defaults");
     enqueue_and_echo_commands_P(PSTR("M502"));
     buzzer.tone(105, 1661);
     buzzer.tone(210, 1108);
-  } else if (strcmp(SelectedDirectory, "<preheat bed>")==0) {
+  } else if (strcmp_P(SelectedDirectory, PSTR("<preheat bed>"))==0) {
     SERIAL_PROTOCOLLNPGM("Special Menu: Preheat Bed");
     enqueue_and_echo_commands_P(PSTR("M140 S60"));
-  } else if (strcmp(SelectedDirectory, "<start mesh leveling>")==0) {
+  } else if (strcmp_P(SelectedDirectory, PSTR("<start mesh leveling>"))==0) {
     SERIAL_PROTOCOLLNPGM("Special Menu: Start Mesh Leveling");
     enqueue_and_echo_commands_P(PSTR("G29 S1"));
-  } else if (strcmp(SelectedDirectory, "<next mesh point>")==0) {
+  } else if (strcmp_P(SelectedDirectory, PSTR("<next mesh point>"))==0) {
     SERIAL_PROTOCOLLNPGM("Special Menu: Next Mesh Point");
     enqueue_and_echo_commands_P(PSTR("G29 S2"));
-  } else if (strcmp(SelectedDirectory, "<z up 0.1>")==0) {
+  } else if (strcmp_P(SelectedDirectory, PSTR("<z up 0.1>"))==0) {
     SERIAL_PROTOCOLLNPGM("Special Menu: Z Up 0.1");
     enqueue_and_echo_commands_P(PSTR("G91\nG1 Z+0.1\nG90"));
-  } else if (strcmp(SelectedDirectory, "<z up 0.02>")==0) {
+  } else if (strcmp_P(SelectedDirectory, PSTR("<z up 0.02>"))==0) {
     SERIAL_PROTOCOLLNPGM("Special Menu: Z Up 0.02");
     enqueue_and_echo_commands_P(PSTR("G91\nG1 Z+0.02\nG90"));
-  } else if (strcmp(SelectedDirectory, "<z down 0.02>")==0) {
+  } else if (strcmp_P(SelectedDirectory, PSTR("<z down 0.02>"))==0) {
     SERIAL_PROTOCOLLNPGM("Special Menu: Z Down 0.02");
     enqueue_and_echo_commands_P(PSTR("G91\nG1 Z-0.02\nG90"));
-  } else if (strcmp(SelectedDirectory, "<z down 0.1>")==0) {
+  } else if (strcmp_P(SelectedDirectory, PSTR("<z down 0.1>"))==0) {
     SERIAL_PROTOCOLLNPGM("Special Menu: Z Down 0.1");
     enqueue_and_echo_commands_P(PSTR("G91\nG1 Z-0.1\nG90"));
-  } else if (strcmp(SelectedDirectory, "<filamentchange pause>")==0) {
+  } else if (strcmp_P(SelectedDirectory, PSTR("<filamentchange pause>"))==0) {
     SERIAL_PROTOCOLLNPGM("Special Menu: FilamentChange Pause");
     FilamentChangePause();
-  } else if (strcmp(SelectedDirectory, "<filamentchange resume>")==0) {
+  } else if (strcmp_P(SelectedDirectory, PSTR("<filamentchange resume>"))==0) {
     SERIAL_PROTOCOLLNPGM("Special Menu: FilamentChange Resume");
     FilamentChangeResume();
-  } else if (strcmp(SelectedDirectory, "<exit>")==0) {
+  } else if (strcmp_P(SelectedDirectory, PSTR("<exit>"))==0) {
     SpecialMenu=false;
   }
 }
@@ -401,43 +401,29 @@ void AnycubicTFTClass::Ls()
   if (SpecialMenu) {
     switch (filenumber) {
       case 0: // First Page
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Z Up 0.1>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Z Up 0.1>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Z Up 0.02>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Z Up 0.02>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Z Down 0.02>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Z Down 0.02>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Z Down 0.1>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Z Down 0.1>");
+      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Z Up 0.1>\r\n<Z Up 0.1>");
+      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Z Up 0.02>\r\n<Z Up 0.02>");
+      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Z Down 0.02>\r\n<Z Down 0.02>");
+      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Z Down 0.1>\r\n<Z Down 0.1>");
       break;
 
       case 4: // Second Page
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Preheat bed>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Preheat bed>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Start Mesh Leveling>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Start Mesh Leveling>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Next Mesh Point>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Next Mesh Point>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Save EEPROM>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Save EEPROM>");
+      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Preheat bed>\r\n<Preheat bed>");
+      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Start Mesh Leveling>\r\n<Start Mesh Leveling>");
+      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Next Mesh Point>\r\n<Next Mesh Point>");
+      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Save EEPROM>\r\n<Save EEPROM>");
       break;
 
       case 8: // Third Page
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Exit>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Exit>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Auto Tune Hotend PID>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Auto Tune Hotend PID>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Auto Tune Hotbed PID>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Auto Tune Hotbed PID>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Load FW Defaults>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Load FW Defaults>");
+      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Exit>\r\n<Exit>");
+      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Auto Tune Hotend PID>\r\n<Auto Tune Hotend PID>");
+      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Auto Tune Hotbed PID>\r\n<Auto Tune Hotbed PID>");
+      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Load FW Defaults>\r\n<Load FW Defaults>");
       break;
 
       case 12: // Fourth Page
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<FilamentChange Pause>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<FilamentChange Pause>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<FilamentChange Resume>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<FilamentChange Resume>");
+      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<FilamentChange Pause>\r\n<FilamentChange Pause>");
+      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<FilamentChange Resume>\r\n<FilamentChange Resume>");
       break;
 
       default:
@@ -462,14 +448,12 @@ void AnycubicTFTClass::Ls()
       {
         if (cnt==0) // Special Entry
         {
-          if(strcmp(card.getWorkDirName(), "/") == 0) {
-            ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Special Menu>");
-            ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Special Menu>");
+          if(strcmp(card.getWorkDirName(),"/") == 0) {
+            ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Special Menu>\r\n<Special Menu>");
             SERIAL_PROTOCOL(cnt);
             SERIAL_PROTOCOLLNPGM("<Special_Menu>");
           } else {
-            ANYCUBIC_SERIAL_PROTOCOLLNPGM("/..");
-            ANYCUBIC_SERIAL_PROTOCOLLNPGM("/..");
+            ANYCUBIC_SERIAL_PROTOCOLLNPGM("/..\r\n/..");
             SERIAL_PROTOCOL(cnt);
             SERIAL_PROTOCOLLNPGM("/..");
           }
@@ -496,8 +480,7 @@ void AnycubicTFTClass::Ls()
     }
   #endif
   else {
-    ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Special_Menu>");
-    ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Special_Menu>");
+    ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Special_Menu>\r\n<Special_Menu>");
   }
 }
 
