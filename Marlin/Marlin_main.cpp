@@ -11046,7 +11046,7 @@ inline void gcode_M502() {
           #ifdef ANYCUBIC_TFT_DEBUG
               SERIAL_ECHOLNPGM("DEBUG: Enter M600 TFTstate routine");
           #endif
-          AnycubicTFT.TFTstate=ANYCUBIC_TFT_STATE_SDPAUSE_REQ; // enter correct display state to show resume button
+          AnycubicTFT.TFTstate=ANYCUBIC_TFT_STATE_SD_PAUSE_REQ; // enter correct display state to show resume button
           #ifdef ANYCUBIC_TFT_DEBUG
               SERIAL_ECHOLNPGM("DEBUG: Set TFTstate to SDPAUSE_REQ");
           #endif
@@ -11441,7 +11441,7 @@ inline void gcode_M502() {
     if (axis_unhomed_error()) return;
 
     const float cooldown_arc[2] = { 50, 50 };
-    const uint8_t cooldown_target = MAX((parser.ushortval('T', 30)), 15);
+    const uint8_t cooldown_target = MAX((parser.ushortval('T', 30)), (uint16_t) 15);
 
     // set hotbed temperate to zero
     thermalManager.setTargetBed(0);
