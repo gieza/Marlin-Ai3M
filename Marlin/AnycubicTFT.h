@@ -48,13 +48,47 @@ char *ftostr32(const float &);
 #define MSG_MY_VERSION "V116"
 
 #define ANYCUBIC_TFT_STATE_IDLE           0
-#define ANYCUBIC_TFT_STATE_SDPRINT        1
-#define ANYCUBIC_TFT_STATE_SDPAUSE        2
-#define ANYCUBIC_TFT_STATE_SDPAUSE_REQ    3
-#define ANYCUBIC_TFT_STATE_SDPAUSE_OOF    4
-#define ANYCUBIC_TFT_STATE_SDSTOP_REQ     5
-#define ANYCUBIC_TFT_STATE_SDOUTAGE       99
+#define ANYCUBIC_TFT_STATE_SD_PRINT       1
+#define ANYCUBIC_TFT_STATE_SD_PAUSE       2
+#define ANYCUBIC_TFT_STATE_SD_PAUSE_REQ   3
+#define ANYCUBIC_TFT_STATE_SD_PAUSE_OOF   4
+#define ANYCUBIC_TFT_STATE_SD_STOP_REQ    5
+#define ANYCUBIC_TFT_STATE_SD_OUTAGE      99
 
+#define A0_GET_HOTEND_TEMPERATURE             0
+#define A1_GET_HOTEND_TARGET_TEMPERATURE      1
+#define A2_GET_HOTBED_TEMPERATURE             2
+#define A3_GET_HOTBED_TARGET_TEMPERATURE      3
+#define A4_GET_FAN_SPEED                      4
+#define A5_GET_CURRENT_COORDINATE             5
+#define A6_GET_SD_CARD_PRINTING_STATUS        6
+#define A7_GET_PRINTING_TIME                  7
+#define A8_GET_SD_LIST                        8
+#define A9_PAUSE_SD_PRINT                     9
+#define A10_RESUME_SD_PRINT                   10
+#define A11_STOP_SD_PRINT                     11
+#define A12_KILL                              12
+#define A13_SELECTION_FILE                    13
+#define A14_START_PRINTING                    14
+#define A15_RESUMING_FROM_OUTAGE              15
+#define A16_SET_HOTEND_TEMPERATURE            16
+#define A17_SET_HEATED_BED_TEMPERATURE        17
+#define A18_SET_FAN_SPEED                     18
+#define A19_STOP_STEPPER_DRIVERS              19
+#define A20_READ_PRINTING_SPEED               20
+#define A21_ALL_HOME                          21
+#define A22_MOVE_XYZ_EXTRUDE                  22
+#define A23_PREHEAT_PLA                       23
+#define A24_PREHEAT_ABS                       24
+#define A25_COOL_DOWN                         25
+#define A26_REFRESH_SD                        26
+#define A27_SERVOS_ANGLES_ADJUST              27
+#define A28_FILAMENT_TEST                     28
+#define A29_Z_PROBE_OFFESET_SET               29
+#define A30_ASSIST_LEVELING                   30
+#define A31_ZOFFSET                           31
+#define A32_CLEAN_LEVELING_BEEP_FLAG          32
+#define A33_GET_VERSION_INFO                  33
 
 class AnycubicTFTClass {
 public:
@@ -112,12 +146,13 @@ private:
 
   float CodeValue();
   bool CodeSeen(char);
-  void Ls();
+  void ls();
   void StartPrint();
   void PausePrint();
   void StopPrint();
   void StateHandler();
   void GetCommandFromTFT();
+  void processCommandFromTFT();
   void CheckSDCardChange();
   void CheckHeaterError();
   void HandleSpecialMenu();
@@ -125,6 +160,30 @@ private:
   void FilamentChangeResume();
   void ReheatNozzle();
   void ParkAfterStop();
+  void doGetSdCardPrintingStatus();
+  void doGetPrintingTime();
+  void doGetSdList();
+  void doRefershSD();
+  void doPauseSdPrint();
+  void doResumeSdPrint();
+  void doStopSdPrint();
+  void doSelectFile();
+  void doStartPrinting();
+  void doSetHotEndTemp();
+  void doSetHotBedTemp();
+  void doSetFanSpeed();
+  void doStopSteppers();
+  void doReportPrintingSpeed();
+  void doHomePrinter();
+  void doMoveXYZorExtrude();
+  void doPreHeatPrinter(const int16_t celsiusBed, const int16_t celsiusHotEnd, const uint8_t hotEnd2);
+  void doPrinterCoolDown();
+  void doAssistLeveling();
+  void doZOffset();
+  void doCleanLevelingBeepFlag();
+
+  bool isPrinterReadyForCmd();
+  void raiseZAxisIfNeeded();
 
   char     SelectedDirectory[30];
   uint8_t  SpecialMenu=false;

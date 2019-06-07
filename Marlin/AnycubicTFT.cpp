@@ -145,7 +145,7 @@ void AnycubicTFTClass::StartPrint() {
       // no pause, just a regular start
       starttime=millis();
       card.startFileprint();
-      TFTstate=ANYCUBIC_TFT_STATE_SDPRINT;
+      TFTstate=ANYCUBIC_TFT_STATE_SD_PRINT;
       ANYCUBIC_TFT_DEBUG_ECHOLNPAIR(" DEBUG: AI3M Pause State: ", ai3m_pause_state);
       ANYCUBIC_TFT_DEBUG_ECHOLNPGM("DEBUG: Regular Start");
       break;
@@ -159,7 +159,7 @@ void AnycubicTFTClass::StartPrint() {
       IsParked=false; // remove parked flag
       starttime=millis();
       card.startFileprint(); // resume regularly
-      TFTstate=ANYCUBIC_TFT_STATE_SDPRINT;
+      TFTstate=ANYCUBIC_TFT_STATE_SD_PRINT;
       ai3m_pause_state = 0;
       
       ANYCUBIC_TFT_DEBUG_ECHOLNPAIR(" DEBUG: AI3M Pause State: ", ai3m_pause_state);
@@ -188,7 +188,7 @@ void AnycubicTFTClass::StartPrint() {
       break;
     case 4:
       // nozzle was timed out before (M600), do not enter printing state yet
-      TFTstate=ANYCUBIC_TFT_STATE_SDPAUSE_REQ;
+      TFTstate=ANYCUBIC_TFT_STATE_SD_PAUSE_REQ;
       ANYCUBIC_TFT_DEBUG_ECHOLNPGM("DEBUG: Set Pause again because of timeout");
 
       // clear the timeout flag to ensure the print continues on the
@@ -199,7 +199,7 @@ void AnycubicTFTClass::StartPrint() {
       break;
     case 5:
       // nozzle was timed out before (runout), do not enter printing state yet
-      TFTstate=ANYCUBIC_TFT_STATE_SDPAUSE_REQ;
+      TFTstate=ANYCUBIC_TFT_STATE_SD_PAUSE_REQ;
       ANYCUBIC_TFT_DEBUG_ECHOLNPGM("DEBUG: Set Pause again because of timeout");
 
       // clear the timeout flag to ensure the print continues on the
@@ -237,7 +237,7 @@ void AnycubicTFTClass::PausePrint() {
       enqueue_and_echo_commands_P(PSTR("M25")); // pause print and park nozzle
       ai3m_pause_state = 3;
       ANYCUBIC_TFT_DEBUG_ECHOLNPGM("DEBUG: M25 sent, parking nozzle");
-      ANYCUBIC_TFT_DEBUG_ECHOLNPAIR(" DEBUG: AI3M Pause State: ", ai3m_pause_state);
+      ANYCUBIC_TFT_DEBUG_ECHOLNPGM(" DEBUG: AI3M Pause State: 3");
       
       IsParked = true;
       // show filament runout prompt on screen
@@ -246,28 +246,28 @@ void AnycubicTFTClass::PausePrint() {
       ANYCUBIC_TFT_DEBUG_ECHOLNPGM("DEBUG: J23 Show filament prompt");
     }
   #endif
-  TFTstate=ANYCUBIC_TFT_STATE_SDPAUSE_REQ;
+  TFTstate=ANYCUBIC_TFT_STATE_SD_PAUSE_REQ;
 }
 
 void AnycubicTFTClass::StopPrint(){
-  // stop print, disable heaters
-  card.stopSDPrint();
-  clear_command_queue();
-  ANYCUBIC_TFT_DEBUG_ECHOLNPGM("DEBUG: Stopped and cleared");
+    // stop print, disable heaters
+    card.stopSDPrint();
+    clear_command_queue();
+    ANYCUBIC_TFT_DEBUG_ECHOLNPGM("DEBUG: Stopped and cleared");
 
-  print_job_timer.stop();
-  thermalManager.disable_all_heaters();
-  // we are not parked yet, do it in the display state routine
-  IsParked = false;
-  // turn off fan, cancel any heatups and set display state
-  #if FAN_COUNT > 0
+    print_job_timer.stop();
+    thermalManager.disable_all_heaters();
+    // we are not parked yet, do it in the display state routine
+    IsParked = false;
+// turn off fan, cancel any heatups and set display state
+#if FAN_COUNT > 0
     for (uint8_t i = 0; i < FAN_COUNT; i++) fanSpeeds[i] = 0;
-  #endif
-  wait_for_heatup=false;
-  ai3m_pause_state = 0;
-  ANYCUBIC_TFT_DEBUG_ECHOLNPAIR(" DEBUG: AI3M Pause State: ", ai3m_pause_state);
-  
-  TFTstate=ANYCUBIC_TFT_STATE_SDSTOP_REQ;
+#endif
+    wait_for_heatup = false;
+    ai3m_pause_state = 0;
+    ANYCUBIC_TFT_DEBUG_ECHOLNPGM(" DEBUG: AI3M Pause State: 0");
+
+    TFTstate = ANYCUBIC_TFT_STATE_SD_STOP_REQ;
 }
 
 void AnycubicTFTClass::FilamentChangeResume(){
@@ -288,11 +288,11 @@ void AnycubicTFTClass::FilamentChangePause(){
   // set filament change flag to ensure the M108 routine
   // gets used when the user hits CONTINUE
   ai3m_pause_state = 2;
-  ANYCUBIC_TFT_DEBUG_ECHOLNPAIR(" DEBUG: AI3M Pause State: ", ai3m_pause_state);
+  ANYCUBIC_TFT_DEBUG_ECHOLNPGM(" DEBUG: AI3M Pause State: 2");
 
   // call M600 and set display state to paused
   enqueue_and_echo_commands_P(PSTR("M600"));
-  TFTstate=ANYCUBIC_TFT_STATE_SDPAUSE_REQ;
+  TFTstate=ANYCUBIC_TFT_STATE_SD_PAUSE_REQ;
   ANYCUBIC_TFT_DEBUG_ECHOLNPGM("DEBUG: M600 Pause called");
 }
 
@@ -316,7 +316,7 @@ void AnycubicTFTClass::ReheatNozzle(){
   }
 
   // set pause state to show CONTINUE button again
-  TFTstate=ANYCUBIC_TFT_STATE_SDPAUSE_REQ;
+  TFTstate=ANYCUBIC_TFT_STATE_SD_PAUSE_REQ;
 }
 
 void AnycubicTFTClass::ParkAfterStop(){
@@ -335,19 +335,16 @@ void AnycubicTFTClass::ParkAfterStop(){
   ANYCUBIC_TFT_DEBUG_ECHOLNPAIR(" DEBUG: AI3M Pause State: ", ai3m_pause_state);
 }
 
-float AnycubicTFTClass::CodeValue()
-{
+float AnycubicTFTClass::CodeValue() {
   return (strtod(&TFTcmdbuffer[TFTbufindr][TFTstrchr_pointer - TFTcmdbuffer[TFTbufindr] + 1], NULL));
 }
 
-bool AnycubicTFTClass::CodeSeen(char code)
-{
+bool AnycubicTFTClass::CodeSeen(char code) {
   TFTstrchr_pointer = strchr(TFTcmdbuffer[TFTbufindr], code);
   return (TFTstrchr_pointer != NULL); //Return True if a character was found
 }
 
-void AnycubicTFTClass::HandleSpecialMenu()
-{
+void AnycubicTFTClass::HandleSpecialMenu() {
   if(strcmp_P(SelectedDirectory, PSTR("<special menu>"))==0) {
     SpecialMenu=true;
   } else if (strcmp_P(SelectedDirectory, PSTR("<auto tune hotend pid>"))==0) {
@@ -398,8 +395,7 @@ void AnycubicTFTClass::HandleSpecialMenu()
   }
 }
 
-void AnycubicTFTClass::Ls()
-{
+void AnycubicTFTClass::ls() {
   if (SpecialMenu) {
     switch (filenumber) {
       case 0: // First Page
@@ -433,28 +429,23 @@ void AnycubicTFTClass::Ls()
     }
   }
   #ifdef SDSUPPORT
-    else if(card.cardOK)
-    {
-      uint16_t cnt=filenumber;
+    else if(card.cardOK) {
       uint16_t max_files;
-      uint16_t dir_files=card.getnrfilenames();
+      uint16_t dir_files=card.getnrfilenames(); //recursevly reads and counts number of files and directories on SD card
 
-      if((dir_files-filenumber)<4)
-      {
-        max_files=dir_files;
+      if ((dir_files - filenumber) < 4) {   //if selected fi are more than 4 directories
+          max_files = dir_files;
       } else {
-        max_files=filenumber+3;
+          max_files = filenumber + 3;
       }
 
-      for(cnt=filenumber; cnt<=max_files; cnt++)
-      {
-        if (cnt==0) // Special Entry
-        {
-          if(strcmp(card.getWorkDirName(),"/") == 0) {
+      for(uint16_t cnt=filenumber; cnt<=max_files; cnt++) {
+        if (cnt==0) {// Special Entry
+          if(strcmp(card.getWorkDirName(),"/") == 0) {        //shows that we are in the root folder
             ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Special Menu>\r\n<Special Menu>");
             SERIAL_PROTOCOL(cnt);
             SERIAL_PROTOCOLLNPGM("<Special_Menu>");
-          } else {
+          } else {                                          //shows, that we are in subfolder -- it is possible to go up
             ANYCUBIC_SERIAL_PROTOCOLLNPGM("/..\r\n/..");
             SERIAL_PROTOCOL(cnt);
             SERIAL_PROTOCOLLNPGM("/..");
@@ -536,20 +527,20 @@ void AnycubicTFTClass::StateHandler()
     case ANYCUBIC_TFT_STATE_IDLE:
       #ifdef SDSUPPORT
         if(card.sdprinting) {
-          TFTstate=ANYCUBIC_TFT_STATE_SDPRINT;
+          TFTstate=ANYCUBIC_TFT_STATE_SD_PRINT;
           starttime=millis();
 
           // --> Send print info to display... most probably print started via gcode
         }
       #endif
       break;
-    case ANYCUBIC_TFT_STATE_SDPRINT:
+    case ANYCUBIC_TFT_STATE_SD_PRINT:
       #ifdef SDSUPPORT
         if(!card.sdprinting) {
           // It seems that we are to printing anymore... pause or stopped?
           if (card.isFileOpen()) {
             // File is still open --> paused
-            TFTstate=ANYCUBIC_TFT_STATE_SDPAUSE;
+            TFTstate=ANYCUBIC_TFT_STATE_SD_PAUSE;
           } else if ((!card.isFileOpen()) && (ai3m_pause_state == 0)) {
             // File is closed --> stopped
             TFTstate=ANYCUBIC_TFT_STATE_IDLE;
@@ -561,17 +552,17 @@ void AnycubicTFTClass::StateHandler()
         }
       #endif
       break;
-    case ANYCUBIC_TFT_STATE_SDPAUSE:
+    case ANYCUBIC_TFT_STATE_SD_PAUSE:
       break;
-    case ANYCUBIC_TFT_STATE_SDPAUSE_OOF:
+    case ANYCUBIC_TFT_STATE_SD_PAUSE_OOF:
       #ifdef ANYCUBIC_FILAMENT_RUNOUT_SENSOR
         if(!FilamentTestStatus) {
           // We got filament again
-          TFTstate=ANYCUBIC_TFT_STATE_SDPAUSE;
+          TFTstate=ANYCUBIC_TFT_STATE_SD_PAUSE;
         }
       #endif
       break;
-    case ANYCUBIC_TFT_STATE_SDPAUSE_REQ:
+    case ANYCUBIC_TFT_STATE_SD_PAUSE_REQ:
       ANYCUBIC_SERIAL_PROTOCOLLNPGM("J18");
       #ifdef SDSUPPORT
         if((!card.sdprinting) && (!planner.movesplanned())) {
@@ -590,17 +581,17 @@ void AnycubicTFTClass::StateHandler()
           }
           #ifdef ANYCUBIC_FILAMENT_RUNOUT_SENSOR
             if(FilamentTestStatus) {
-              TFTstate=ANYCUBIC_TFT_STATE_SDPAUSE;
+              TFTstate=ANYCUBIC_TFT_STATE_SD_PAUSE;
             } else {
               // Pause because of "out of filament"
-              TFTstate=ANYCUBIC_TFT_STATE_SDPAUSE_OOF;
+              TFTstate=ANYCUBIC_TFT_STATE_SD_PAUSE_OOF;
             }
           #endif
           ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Serial Debug: SD print paused done... J18");
         }
       #endif
       break;
-    case ANYCUBIC_TFT_STATE_SDSTOP_REQ:
+    case ANYCUBIC_TFT_STATE_SD_STOP_REQ:
       #ifdef SDSUPPORT
         ANYCUBIC_SERIAL_PROTOCOLLNPGM("J16");// J16 stop print
         if((!card.sdprinting) && (!planner.movesplanned())) {
@@ -669,67 +660,69 @@ void AnycubicTFTClass::FilamentRunout()
   #endif
 }
 
-void AnycubicTFTClass::GetCommandFromTFT()
-{
-  char *starpos = NULL;
-  while( AnycubicSerial.available() > 0  && TFTbuflen < TFTBUFSIZE)
-  {
-    serial3_char = AnycubicSerial.read();
-    if(serial3_char == '\n' ||
-    serial3_char == '\r' ||
-    serial3_char == ':'  ||
-    serial3_count >= (TFT_MAX_CMD_SIZE - 1) )
-    {
-      if(!serial3_count) { //if empty line
-        return;
-      }
+void AnycubicTFTClass::GetCommandFromTFT() {
+    while (AnycubicSerial.available() > 0 && TFTbuflen < TFTBUFSIZE) {
+        serial3_char = AnycubicSerial.read();
+        if (serial3_char == '\n' || serial3_char == '\r' ||
+            serial3_char == ':' || serial3_count >= (TFT_MAX_CMD_SIZE - 1)) {
+            if (!serial3_count) {  // if empty line
+                return;
+            }
 
-      TFTcmdbuffer[TFTbufindw][serial3_count] = 0; //terminate string
+            TFTcmdbuffer[TFTbufindw][serial3_count] = 0;  // terminate string
 
-      if((strchr(TFTcmdbuffer[TFTbufindw], 'A') != NULL)) {
-        int16_t a_command;
-        TFTstrchr_pointer = strchr(TFTcmdbuffer[TFTbufindw], 'A');
-        a_command=((int)((strtod(&TFTcmdbuffer[TFTbufindw][TFTstrchr_pointer - TFTcmdbuffer[TFTbufindw] + 1], NULL))));
+            if ((strchr(TFTcmdbuffer[TFTbufindw], 'A') != NULL)) {
+                TFTstrchr_pointer = strchr(TFTcmdbuffer[TFTbufindw], 'A');
+                processCommandFromTFT();
+            }
+            TFTbufindw = (TFTbufindw + 1) % TFTBUFSIZE;
+            TFTbuflen += 1;
+            serial3_count = 0;  // clear buffer
+        } else {
+            TFTcmdbuffer[TFTbufindw][serial3_count++] = serial3_char;
+        }
+    }
+}
 
-        #ifdef ANYCUBIC_TFT_DEBUG
-        if ((a_command>7) && (a_command != 20)) // No debugging of status polls, please!
-        SERIAL_ECHOLNPAIR("TFT Serial Command: ", TFTcmdbuffer[TFTbufindw]);
-        #endif
+void AnycubicTFTClass::processCommandFromTFT() {
+    
+    int16_t a_command = ((int)((strtod(&TFTcmdbuffer[TFTbufindw][TFTstrchr_pointer - TFTcmdbuffer[TFTbufindw] + 1], NULL))));
 
-        switch(a_command) {
+    #ifdef ANYCUBIC_TFT_DEBUG
+        if ((a_command > 7) &&
+            (a_command != 20))  // No debugging of status polls, please!
+            SERIAL_ECHOLNPAIR("TFT Serial Command: ", TFTcmdbuffer[TFTbufindw]);
+    #endif
 
-          case 0: //A0 GET HOTEND TEMP
+    switch (a_command) {
+        case A0_GET_HOTEND_TEMPERATURE:
             ANYCUBIC_SERIAL_PROTOCOLPGM("A0V ");
             ANYCUBIC_SERIAL_PROTOCOLLN(itostr3(int(thermalManager.degHotend(0) + 0.5)));
             break;
 
-          case 1: //A1  GET HOTEND TARGET TEMP
+        case A1_GET_HOTEND_TARGET_TEMPERATURE:
             ANYCUBIC_SERIAL_PROTOCOLPGM("A1V ");
             ANYCUBIC_SERIAL_PROTOCOLLN(itostr3(int(thermalManager.degTargetHotend(0) + 0.5)));
             break;
 
-          case 2: //A2 GET HOTBED TEMP
+        case A2_GET_HOTBED_TEMPERATURE:  // A2 GET HOTBED TEMP
             ANYCUBIC_SERIAL_PROTOCOLPGM("A2V ");
             ANYCUBIC_SERIAL_PROTOCOLLN(itostr3(int(thermalManager.degBed() + 0.5)));
             break;
 
-          case 3: //A3 GET HOTBED TARGET TEMP
+        case A3_GET_HOTBED_TARGET_TEMPERATURE:  // A3 GET HOTBED TARGET TEMP
             ANYCUBIC_SERIAL_PROTOCOLPGM("A3V ");
             ANYCUBIC_SERIAL_PROTOCOLLN(itostr3(int(thermalManager.degTargetBed() + 0.5)));
             break;
 
-          case 4://A4 GET FAN SPEED
-            {
-              unsigned int temp;
+        case A4_GET_FAN_SPEED:  // A4 GET FAN SPEED
+            { unsigned int temp = ((fanSpeeds[0] * 100) / 255);
+            temp = constrain(temp, 0, 100);
 
-              temp=((fanSpeeds[0]*100)/255);
-              temp=constrain(temp,0,100);
-
-              ANYCUBIC_SERIAL_PROTOCOLPGM("A4V ");
-              ANYCUBIC_SERIAL_PROTOCOLLN(temp);
-            }
+            ANYCUBIC_SERIAL_PROTOCOLPGM("A4V ");
+            ANYCUBIC_SERIAL_PROTOCOLLN(temp); }
             break;
-          case 5:// A5 GET CURRENT COORDINATE
+        case A5_GET_CURRENT_COORDINATE:  // A5 GET CURRENT COORDINATE
             ANYCUBIC_SERIAL_PROTOCOLPGM("A5V X: ");
             ANYCUBIC_SERIAL_PROTOCOL(current_position[X_AXIS]);
             ANYCUBIC_SERIAL_PROTOCOLPGM(" Y: ");
@@ -738,142 +731,35 @@ void AnycubicTFTClass::GetCommandFromTFT()
             ANYCUBIC_SERIAL_PROTOCOL(current_position[Z_AXIS]);
             ANYCUBIC_SERIAL_PROTOCOLLNPGM(" ");
             break;
-          case 6: //A6 GET SD CARD PRINTING STATUS
-            #ifdef SDSUPPORT
-              if(card.sdprinting) {
-                ANYCUBIC_SERIAL_PROTOCOLPGM("A6V ");
-                if(card.cardOK)
-                {
-                  ANYCUBIC_SERIAL_PROTOCOL(itostr3(card.percentDone()));
-                }
-                else
-                {
-                  ANYCUBIC_SERIAL_PROTOCOLPGM("J02");
-                }
-              }
-              else
-              ANYCUBIC_SERIAL_PROTOCOLPGM("A6V ---");
-              ANYCUBIC_SERIAL_ENTER();
-            #endif
+        case A6_GET_SD_CARD_PRINTING_STATUS:  // A6 GET SD CARD PRINTING STATUS
+            doGetSdCardPrintingStatus();
             break;
-          case 7://A7 GET PRINTING TIME
-            {
-              ANYCUBIC_SERIAL_PROTOCOLPGM("A7V ");
-              if(starttime != 0) // print time
-              {
-                uint16_t time = millis()/60000 - starttime/60000;
-                ANYCUBIC_SERIAL_PROTOCOL(itostr2(time/60));
-                ANYCUBIC_SERIAL_PROTOCOLPGM(" H ");
-                ANYCUBIC_SERIAL_PROTOCOL(itostr2(time%60));
-                ANYCUBIC_SERIAL_PROTOCOLLNPGM(" M");
-              }else{
-                ANYCUBIC_SERIAL_PROTOCOLLNPGM(" 999:999");
-              }
+        case A7_GET_PRINTING_TIME:  // A7 GET PRINTING TIME
+            doGetPrintingTime();
             break;
-          }
-          case 8: // A8 GET  SD LIST
-            #ifdef SDSUPPORT
-              SelectedDirectory[0]=0;
-              if(!IS_SD_INSERTED())
-              {
-                ANYCUBIC_SERIAL_PROTOCOLLNPGM("J02");
-              }
-              else
-              {
-                if(CodeSeen('S'))
-                filenumber=CodeValue();
-
-                ANYCUBIC_SERIAL_PROTOCOLLNPGM("FN "); // Filelist start
-                Ls();
-                ANYCUBIC_SERIAL_PROTOCOLLNPGM("END"); // Filelist stop
-              }
-            #endif
+        case A8_GET_SD_LIST:  // A8 GET  SD LIST
+            doGetSdList();
             break;
-          case 9: // A9 pause sd print
-            #ifdef SDSUPPORT
-              if(card.sdprinting)
-              {
-                PausePrint();
-              }
-              else
-              {
-                ai3m_pause_state = 0;
-                ANYCUBIC_TFT_DEBUG_ECHOLNPAIR(" DEBUG: AI3M Pause State: ", ai3m_pause_state);
-                StopPrint();
-              }
-            #endif
+        case A9_PAUSE_SD_PRINT:  // A9 pause sd print
+            doPauseSdPrint();
             break;
-          case 10: // A10 resume sd print
-            #ifdef SDSUPPORT
-              if((TFTstate==ANYCUBIC_TFT_STATE_SDPAUSE) || (TFTstate==ANYCUBIC_TFT_STATE_SDOUTAGE))
-              {
-                StartPrint();
-                ANYCUBIC_SERIAL_PROTOCOLLNPGM("J04");// J04 printing form sd card now
-                ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Serial Debug: SD print started... J04");
-              }
-              if (nozzle_timed_out) {
-                ReheatNozzle();
-              }
-            #endif
+        case A10_RESUME_SD_PRINT:  // A10 resume sd print
+            doResumeSdPrint();
             break;
-          case 11: // A11 STOP SD PRINT
-            #ifdef SDSUPPORT
-              if((card.sdprinting) || (TFTstate==ANYCUBIC_TFT_STATE_SDOUTAGE))
-              {
-                StopPrint();
-              } else {
-                ANYCUBIC_SERIAL_PROTOCOLLNPGM("J16");
-                TFTstate=ANYCUBIC_TFT_STATE_IDLE;
-                ai3m_pause_state = 0;
-                ANYCUBIC_TFT_DEBUG_ECHOLNPAIR(" DEBUG: AI3M Pause State: ", ai3m_pause_state);
-              }
-              #endif
+        case A11_STOP_SD_PRINT:  // A11 STOP SD PRINT
+            doStopSdPrint();
             break;
-          case 12: // A12 kill
+        case A12_KILL:  // A12 kill
             kill(PSTR(MSG_KILLED));
             break;
-          case 13: // A13 SELECTION FILE
-              #ifdef SDSUPPORT
-              if((TFTstate!=ANYCUBIC_TFT_STATE_SDOUTAGE))
-              {
-                starpos = (strchr(TFTstrchr_pointer + 4,'*'));
-                if (TFTstrchr_pointer[4] == '/') {
-                  strcpy(SelectedDirectory, TFTstrchr_pointer+5);
-                } else if (TFTstrchr_pointer[4] == '<') {
-                  strcpy(SelectedDirectory, TFTstrchr_pointer+4);
-                } else {
-                  SelectedDirectory[0]=0;
-
-                  if(starpos!=NULL)
-                  *(starpos-1)='\0';
-                  card.openFile(TFTstrchr_pointer + 4,true);
-                  if (card.isFileOpen()) {
-                    ANYCUBIC_SERIAL_PROTOCOLLNPGM("J20"); // J20 Open successful
-                    ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Serial Debug: File open successful... J20");
-                  } else {
-                    ANYCUBIC_SERIAL_PROTOCOLLNPGM("J21"); // J21 Open failed
-                    ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Serial Debug: File open failed... J21");
-                  }
-                }
-                ANYCUBIC_SERIAL_ENTER();
-              }
-              #endif
+        case A13_SELECTION_FILE:  // A13 SELECTION FILE
+            doSelectFile();
             break;
-          case 14: // A14 START PRINTING
-            #ifdef SDSUPPORT
-              if((!planner.movesplanned()) && (TFTstate!=ANYCUBIC_TFT_STATE_SDPAUSE) && (TFTstate!=ANYCUBIC_TFT_STATE_SDOUTAGE) && (card.isFileOpen()))
-              {
-                ai3m_pause_state = 0;
-                ANYCUBIC_TFT_DEBUG_ECHOLNPAIR(" DEBUG: AI3M Pause State: ", ai3m_pause_state);
-                StartPrint();
-                IsParked = false;
-                ANYCUBIC_SERIAL_PROTOCOLLNPGM("J04"); // J04 Starting Print
-                ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Serial Debug: Starting SD Print... J04");
-              }
-            #endif
+        case A14_START_PRINTING:  // A14 START PRINTING
+            doStartPrinting();
             break;
-          case 15: // A15 RESUMING FROM OUTAGE
-            //if((!planner.movesplanned())&&(!TFTresumingflag))
+        case A15_RESUMING_FROM_OUTAGE:  // A15 RESUMING FROM OUTAGE
+            // if((!planner.movesplanned())&&(!TFTresumingflag))
             //  {
             //    if(card.cardOK)
             //      FlagResumFromOutage=true;
@@ -882,296 +768,465 @@ void AnycubicTFTClass::GetCommandFromTFT()
             //      starttime=millis();
             //      ANYCUBIC_SERIAL_SUCC_START;
             //  }
-            //ANYCUBIC_SERIAL_ENTER();
+            // ANYCUBIC_SERIAL_ENTER();
             break;
-          case 16: // A16 set hotend temp
-            {
-              unsigned int tempvalue;
-              if(CodeSeen('S'))
-              {
-                tempvalue=constrain(CodeValue(),0,275);
-                thermalManager.setTargetHotend(tempvalue,0);
-              }
-              else if((CodeSeen('C'))&&(!planner.movesplanned()))
-              {
-                if((current_position[Z_AXIS]<10))
-                enqueue_and_echo_commands_P(PSTR("G1 Z10")); //RASE Z AXIS
-                tempvalue=constrain(CodeValue(),0,275);
-                thermalManager.setTargetHotend(tempvalue,0);
-              }
-            }
-            //  ANYCUBIC_SERIAL_ENTER();
+        case A16_SET_HOTEND_TEMPERATURE:  // A16 set hotend temp
+            doSetHotEndTemp();
             break;
-          case 17:// A17 set heated bed temp
-            {
-              unsigned int tempbed;
-              if(CodeSeen('S')) {tempbed=constrain(CodeValue(),0,150);
-                thermalManager.setTargetBed(tempbed);}
-            }
-            //  ANYCUBIC_SERIAL_ENTER();
+        case A17_SET_HEATED_BED_TEMPERATURE:  // A17 set heated bed temp
+            doSetHotBedTemp();
             break;
-          case 18:// A18 set fan speed
-            unsigned int temp;
-            if (CodeSeen('S'))
-            {
-              temp=(CodeValue()*255/100);
-              temp=constrain(temp,0,255);
-              fanSpeeds[0]=temp;
-            }
-            else fanSpeeds[0]=255;
-            ANYCUBIC_SERIAL_ENTER();
+        case A18_SET_FAN_SPEED:  // A18 set fan speed
+            doSetFanSpeed();
             break;
-          case 19: // A19 stop stepper drivers
-            if((!planner.movesplanned())
-            #ifdef SDSUPPORT
-            &&(!card.sdprinting)
-            #endif
-            )
-            {
-              quickstop_stepper();
-              disable_X();
-              disable_Y();
-              disable_Z();
-              disable_E0();
+        case A19_STOP_STEPPER_DRIVERS:  // A19 stop stepper drivers
+            doStopSteppers();
+            break;
+        case A20_READ_PRINTING_SPEED:  // A20 read printing speed
+            doReportPrintingSpeed();
+            break;
+        case A21_ALL_HOME:  // A21 all home
+            doHomePrinter();
+            break;
+        case A22_MOVE_XYZ_EXTRUDE:  // A22 move X/Y/Z or extrude
+            doMoveXYZorExtrude();
+            break;
+        case A23_PREHEAT_PLA:  // A23 preheat pla
+            doPreHeatPrinter(50, 200, 0);
+            break;
+        case A24_PREHEAT_ABS:  // A24 preheat abs
+            doPreHeatPrinter(80, 240, 0);
+            break;
+        case A25_COOL_DOWN:  // A25 cool down
+            doPrinterCoolDown();
+            break;
+        case A26_REFRESH_SD:  // A26 refresh SD or change directory
+            doRefershSD();
+            break;
+        #ifdef SERVO_ENDSTOPS
+        case A27_SERVOS_ANGLES_ADJUST:  // A27 servos angles  adjust
+            break;
+        #endif
+        case A28_FILAMENT_TEST:  // A28 filament test
+            if (CodeSeen('O')) {
+                ;
+            } else if (CodeSeen('C')) {
+                ;
             }
             ANYCUBIC_SERIAL_ENTER();
             break;
-          case 20:// A20 read printing speed
-          {
-            if(CodeSeen('S')) {
-              feedrate_percentage=constrain(CodeValue(),40,999);
-            }
-            else{
-              ANYCUBIC_SERIAL_PROTOCOLPGM("A20V ");
-              ANYCUBIC_SERIAL_PROTOCOLLN(feedrate_percentage);
-            }
-          }
-          break;
-          case 21: // A21 all home
-            if((!planner.movesplanned()) && (TFTstate!=ANYCUBIC_TFT_STATE_SDPAUSE) && (TFTstate!=ANYCUBIC_TFT_STATE_SDOUTAGE))
-            {
-              if(CodeSeen('X')||CodeSeen('Y')||CodeSeen('Z'))
-              {
-                if(CodeSeen('X')) enqueue_and_echo_commands_P(PSTR("G28 X"));
-                if(CodeSeen('Y')) enqueue_and_echo_commands_P(PSTR("G28 Y"));
-                if(CodeSeen('Z')) enqueue_and_echo_commands_P(PSTR("G28 Z"));
-              }
-              else if(CodeSeen('C')) enqueue_and_echo_commands_P(PSTR("G28"));
-            }
-            break;
-          case 22: // A22 move X/Y/Z or extrude
-            if((!planner.movesplanned()) && (TFTstate!=ANYCUBIC_TFT_STATE_SDPAUSE) && (TFTstate!=ANYCUBIC_TFT_STATE_SDOUTAGE))
-            {
-              float coorvalue;
-              unsigned int movespeed=0;
-              char value[30];
-              if(CodeSeen('F')) // Set feedrate
-              movespeed = CodeValue();
-
-              enqueue_and_echo_commands_P(PSTR("G91")); // relative coordinates
-
-              if(CodeSeen('X')) // Move in X direction
-              {
-                coorvalue=CodeValue();
-                if((coorvalue<=0.2)&&coorvalue>0) {sprintf_P(value,PSTR("G1 X0.1F%i"),movespeed);}
-                else if((coorvalue<=-0.1)&&coorvalue>-1) {sprintf_P(value,PSTR("G1 X-0.1F%i"),movespeed);}
-                else {sprintf_P(value,PSTR("G1 X%iF%i"),int(coorvalue),movespeed);}
-                enqueue_and_echo_command(value);
-              }
-              else if(CodeSeen('Y')) // Move in Y direction
-              {
-                coorvalue=CodeValue();
-                if((coorvalue<=0.2)&&coorvalue>0) {sprintf_P(value,PSTR("G1 Y0.1F%i"),movespeed);}
-                else if((coorvalue<=-0.1)&&coorvalue>-1) {sprintf_P(value,PSTR("G1 Y-0.1F%i"),movespeed);}
-                else {sprintf_P(value,PSTR("G1 Y%iF%i"),int(coorvalue),movespeed);}
-                enqueue_and_echo_command(value);
-              }
-              else if(CodeSeen('Z')) // Move in Z direction
-              {
-                coorvalue=CodeValue();
-                if((coorvalue<=0.2)&&coorvalue>0) {sprintf_P(value,PSTR("G1 Z0.1F%i"),movespeed);}
-                else if((coorvalue<=-0.1)&&coorvalue>-1) {sprintf_P(value,PSTR("G1 Z-0.1F%i"),movespeed);}
-                else {sprintf_P(value,PSTR("G1 Z%iF%i"),int(coorvalue),movespeed);}
-                enqueue_and_echo_command(value);
-              }
-              else if(CodeSeen('E')) // Extrude
-              {
-                coorvalue=CodeValue();
-                if((coorvalue<=0.2)&&coorvalue>0) {sprintf_P(value,PSTR("G1 E0.1F%i"),movespeed);}
-                else if((coorvalue<=-0.1)&&coorvalue>-1) {sprintf_P(value,PSTR("G1 E-0.1F%i"),movespeed);}
-                else {sprintf_P(value,PSTR("G1 E%iF500"),int(coorvalue)); }
-                enqueue_and_echo_command(value);
-              }
-              enqueue_and_echo_commands_P(PSTR("G90")); // absolute coordinates
-            }
-            ANYCUBIC_SERIAL_ENTER();
-            break;
-          case 23: // A23 preheat pla
-            if((!planner.movesplanned())&& (TFTstate!=ANYCUBIC_TFT_STATE_SDPAUSE) && (TFTstate!=ANYCUBIC_TFT_STATE_SDOUTAGE))
-            {
-              if((current_position[Z_AXIS]<10)) enqueue_and_echo_commands_P(PSTR("G1 Z10")); // RAISE Z AXIS
-              thermalManager.setTargetBed(50);
-              thermalManager.setTargetHotend(200, 0);
-              ANYCUBIC_SERIAL_SUCC_START;
-              ANYCUBIC_SERIAL_ENTER();
-            }
-            break;
-          case 24:// A24 preheat abs
-            if((!planner.movesplanned()) && (TFTstate!=ANYCUBIC_TFT_STATE_SDPAUSE) && (TFTstate!=ANYCUBIC_TFT_STATE_SDOUTAGE))
-            {
-              if((current_position[Z_AXIS]<10)) enqueue_and_echo_commands_P(PSTR("G1 Z10")); //RAISE Z AXIS
-              thermalManager.setTargetBed(80);
-              thermalManager.setTargetHotend(240, 0);
-
-              ANYCUBIC_SERIAL_SUCC_START;
-              ANYCUBIC_SERIAL_ENTER();
-            }
-            break;
-          case 25: // A25 cool down
-            if((!planner.movesplanned())&& (TFTstate!=ANYCUBIC_TFT_STATE_SDPAUSE) && (TFTstate!=ANYCUBIC_TFT_STATE_SDOUTAGE))
-            {
-              thermalManager.setTargetHotend(0,0);
-              thermalManager.setTargetBed(0);
-              ANYCUBIC_SERIAL_PROTOCOLLNPGM("J12"); // J12 cool down
-              ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Serial Debug: Cooling down... J12");
-            }
-            break;
-          case 26: // A26 refresh SD
-            #ifdef SDSUPPORT
-              if (SelectedDirectory[0]==0) {
-                card.initsd();
-              } else {
-                if ((SelectedDirectory[0] == '.') && (SelectedDirectory[1] == '.')) {
-                  card.updir();
-                } else {
-                  if (SelectedDirectory[0] == '<') {
-                    HandleSpecialMenu();
-                  } else {
-                    card.chdir(SelectedDirectory);
-                  }
-                }
-              }
-
-              SelectedDirectory[0]=0;
-
-              if(!IS_SD_INSERTED())
-              {
-                ANYCUBIC_SERIAL_PROTOCOLLNPGM("J02"); // J02 SD Card initilized
-                ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Serial Debug: SD card initialized... J02");
-              }
-            #endif
-            break;
-          #ifdef SERVO_ENDSTOPS
-            case 27: // A27 servos angles  adjust
-              break;
-          #endif
-          case 28: // A28 filament test
-            {
-              if(CodeSeen('O'));
-              else if(CodeSeen('C'));
-            }
-            ANYCUBIC_SERIAL_ENTER();
-            break;
-          case 29: // A29 Z PROBE OFFESET SET
+        case A29_Z_PROBE_OFFESET_SET:  // A29 Z PROBE OFFESET SET
+            //not in use
             break;
 
-          case 30: // A30 assist leveling, the original function was canceled
-            if(CodeSeen('S')) {
-              ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Entering level menue...");
-            } else if(CodeSeen('O')) {
-              ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Leveling started and movint to front left...");
-              enqueue_and_echo_commands_P(PSTR("G91\nG1 Z10 F240\nG90\nG28\nG29\nG1 X20 Y20 F6000\nG1 Z0 F240"));
-            } else if(CodeSeen('T')) {
-              ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Level checkpoint front right...");
-              enqueue_and_echo_commands_P(PSTR("G1 Z5 F240\nG1 X190 Y20 F6000\nG1 Z0 F240"));
-            } else if(CodeSeen('C')) {
-              ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Level checkpoint back right...");
-              enqueue_and_echo_commands_P(PSTR("G1 Z5 F240\nG1 X190 Y190 F6000\nG1 Z0 F240"));
-            } else if(CodeSeen('Q')) {
-              ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Level checkpoint back right...");
-              enqueue_and_echo_commands_P(PSTR("G1 Z5 F240\nG1 X190 Y20 F6000\nG1 Z0 F240"));
-            } else if(CodeSeen('H')) {
-              ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Level check no heating...");
-              //enqueue_and_echo_commands_P(PSTR("... TBD ..."));
-              ANYCUBIC_SERIAL_PROTOCOLLNPGM("J22"); // J22 Test print done
-              ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Serial Debug: Leveling print test done... J22");
-            } else if(CodeSeen('L')) {
-              ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Level check heating...");
-              //enqueue_and_echo_commands_P(PSTR("... TBD ..."));
-              ANYCUBIC_SERIAL_PROTOCOLLNPGM("J22"); // J22 Test print done
-              ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Serial Debug: Leveling print test with heating done... J22");
-            }
-            ANYCUBIC_SERIAL_SUCC_START;
-            ANYCUBIC_SERIAL_ENTER();
-
+        case A30_ASSIST_LEVELING:  // A30 assist leveling, the original function was canceled
+            doAssistLeveling();
             break;
-          case 31: // A31 zoffset
-            if((!planner.movesplanned())&&(TFTstate!=ANYCUBIC_TFT_STATE_SDPAUSE) && (TFTstate!=ANYCUBIC_TFT_STATE_SDOUTAGE))
-            {
-              #if HAS_BED_PROBE
-                char value[30];
-                char *s_zoffset;
-                //if((current_position[Z_AXIS]<10))
-                //  z_offset_auto_test();
-
-                if(CodeSeen('S')) {
-                  ANYCUBIC_SERIAL_PROTOCOLPGM("A9V ");
-                  ANYCUBIC_SERIAL_PROTOCOL(itostr3(int(zprobe_zoffset*100.00 + 0.5)));
-                  ANYCUBIC_SERIAL_ENTER();
-                  ANYCUBIC_TFT_DEBUG_ECHOPGM("TFT sending current z-probe offset data... <\r\nA9V ");
-                  ANYCUBIC_TFT_DEBUG_ECHO(itostr3(int(zprobe_zoffset*100.00 + 0.5)));
-                  ANYCUBIC_TFT_DEBUG_ECHOLNPGM(">");
-                }
-                if(CodeSeen('D'))
-                {
-                  s_zoffset=ftostr32(float(CodeValue())/100.0);
-                  sprintf_P(value,PSTR("M851 Z"));
-                  strcat(value,s_zoffset);
-                  enqueue_and_echo_command(value); // Apply Z-Probe offset
-                  enqueue_and_echo_commands_P(PSTR("M500")); // Save to EEPROM
-                }
-              #endif
-            }
-            ANYCUBIC_SERIAL_ENTER();
+        case A31_ZOFFSET:  // A31 zoffset
+            doZOffset();
+            
             break;
-          case 32: // A32 clean leveling beep flag
-            if(CodeSeen('S')) {
-              ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Level saving data...");
-              enqueue_and_echo_commands_P(PSTR("M500\nM420 S1\nG1 Z10 F240\nG1 X0 Y0 F6000"));
-              ANYCUBIC_SERIAL_SUCC_START;
-              ANYCUBIC_SERIAL_ENTER();
-            }
+        case A32_CLEAN_LEVELING_BEEP_FLAG:  // A32 clean leveling beep flag
+            doCleanLevelingBeepFlag();
             break;
-          case 33: // A33 get version info
-            {
-              ANYCUBIC_SERIAL_PROTOCOLPGM("J33 ");
-              ANYCUBIC_SERIAL_PROTOCOLLNPGM(MSG_MY_VERSION);
-            }
+        case A33_GET_VERSION_INFO:  // A33 get version info
+            ANYCUBIC_SERIAL_PROTOCOLPGM("J33 ");
+            ANYCUBIC_SERIAL_PROTOCOLLNPGM(MSG_MY_VERSION);
             break;
-          default: break;
-        }
-      }
-      TFTbufindw = (TFTbufindw + 1)%TFTBUFSIZE;
-      TFTbuflen += 1;
-      serial3_count = 0; //clear buffer
+        default:
+            ANYCUBIC_TFT_DEBUG_ECHOLNPGM(a_command);
+            break;
     }
-    else
-    {
-      TFTcmdbuffer[TFTbufindw][serial3_count++] = serial3_char;
-    }
-  }
 }
 
-void AnycubicTFTClass::CommandScan()
-{
+void AnycubicTFTClass::doGetSdCardPrintingStatus() {
+#ifdef SDSUPPORT
+    ANYCUBIC_SERIAL_PROTOCOLPGM("A6V ");
+    if (card.sdprinting) {
+        if (card.cardOK) {
+            ANYCUBIC_SERIAL_PROTOCOL(itostr3(card.percentDone()));
+        } else {
+            ANYCUBIC_SERIAL_PROTOCOLPGM("J02");
+        }
+    } else {
+        ANYCUBIC_SERIAL_PROTOCOLPGM("---");
+    }
+    ANYCUBIC_SERIAL_ENTER();
+#endif
+};
+
+void AnycubicTFTClass::doGetPrintingTime() {
+    ANYCUBIC_SERIAL_PROTOCOLPGM("A7V ");
+    if (starttime == 0) {  // print time
+        ANYCUBIC_SERIAL_PROTOCOLLNPGM(" 999:999");
+    } else {
+        uint16_t time = millis() / 60000 - starttime / 60000;
+        ANYCUBIC_SERIAL_PROTOCOL(itostr2(time / 60));
+        ANYCUBIC_SERIAL_PROTOCOLPGM(" H ");
+        ANYCUBIC_SERIAL_PROTOCOL(itostr2(time % 60));
+        ANYCUBIC_SERIAL_PROTOCOLLNPGM(" M");
+    }
+}
+
+void AnycubicTFTClass::doGetSdList() {
+#ifdef SDSUPPORT
+    SelectedDirectory[0] = 0;
+    if (!IS_SD_INSERTED()) {
+        ANYCUBIC_SERIAL_PROTOCOLLNPGM("J02");
+    } else {
+        if (CodeSeen('S')) {
+          filenumber = CodeValue();
+        }
+
+        ANYCUBIC_SERIAL_PROTOCOLLNPGM("FN ");  // Filelist start
+        ls();
+        ANYCUBIC_SERIAL_PROTOCOLLNPGM("END");  // Filelist stop
+    }
+#endif
+}
+
+void AnycubicTFTClass::doRefershSD() {
+#ifdef SDSUPPORT
+    if (SelectedDirectory[0] == 0) {
+        card.initsd();
+    } else if (SelectedDirectory[0] == '<') {
+        HandleSpecialMenu();
+    } else if ((SelectedDirectory[0] == '.') && (SelectedDirectory[1] == '.')) {
+        card.updir();
+    } else {
+      card.chdir(SelectedDirectory);
+    }
+
+    SelectedDirectory[0] = 0;
+
+    if (!IS_SD_INSERTED()) {
+        ANYCUBIC_SERIAL_PROTOCOLLNPGM("J02");  // J02 SD Card initilized
+        ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Serial Debug: SD card initialized... J02");
+    }
+#endif
+}
+
+void AnycubicTFTClass::doPauseSdPrint() {
+#ifdef SDSUPPORT
+    if (card.sdprinting) {
+        PausePrint();
+    } else {
+        ai3m_pause_state = 0;
+        ANYCUBIC_TFT_DEBUG_ECHOLNPAIR(" DEBUG: AI3M Pause State: ", ai3m_pause_state);
+        StopPrint();
+    }
+#endif
+}
+
+void AnycubicTFTClass::doResumeSdPrint() {
+#ifdef SDSUPPORT
+    if ((TFTstate == ANYCUBIC_TFT_STATE_SD_PAUSE) ||
+        (TFTstate == ANYCUBIC_TFT_STATE_SD_OUTAGE)) {
+        StartPrint();
+        ANYCUBIC_SERIAL_PROTOCOLLNPGM("J04");  // J04 printing form sd card now
+        ANYCUBIC_TFT_DEBUG_ECHOLNPGM( "TFT Serial Debug: SD print started... J04");
+    }
+    if (nozzle_timed_out) {
+        ReheatNozzle();
+    }
+#endif
+}
+
+void AnycubicTFTClass::doStopSdPrint() {
+#ifdef SDSUPPORT
+    if (card.sdprinting || (TFTstate == ANYCUBIC_TFT_STATE_SD_OUTAGE)) {
+        StopPrint();
+    } else {
+        ANYCUBIC_SERIAL_PROTOCOLLNPGM("J16");
+        TFTstate = ANYCUBIC_TFT_STATE_IDLE;
+        ai3m_pause_state = 0;
+        ANYCUBIC_TFT_DEBUG_ECHOLNPAIR(" DEBUG: AI3M Pause State: ",
+                                      ai3m_pause_state);
+    }
+#endif
+}
+
+void AnycubicTFTClass::doSelectFile() {
+#ifdef SDSUPPORT
+    if (TFTstate == ANYCUBIC_TFT_STATE_SD_OUTAGE) {
+        return;
+    }
+
+    char *starpos = NULL;
+    starpos = strchr(TFTstrchr_pointer + 4, '*');
+    if (TFTstrchr_pointer[4] == '/') {
+        strcpy(SelectedDirectory, TFTstrchr_pointer + 5);
+    } else if (TFTstrchr_pointer[4] == '<') {
+        strcpy(SelectedDirectory, TFTstrchr_pointer + 4);
+    } else {
+        SelectedDirectory[0] = 0;
+
+        if (starpos != NULL) {
+            *(starpos - 1) = '\0';
+        }
+        card.openFile(TFTstrchr_pointer + 4, true);
+        if (card.isFileOpen()) {
+            ANYCUBIC_SERIAL_PROTOCOLLNPGM("J20");  // J20 Open successful
+            ANYCUBIC_TFT_DEBUG_ECHOLNPGM(
+                "TFT Serial Debug: File open successful... J20");
+        } else {
+            ANYCUBIC_SERIAL_PROTOCOLLNPGM("J21");  // J21 Open failed
+            ANYCUBIC_TFT_DEBUG_ECHOLNPGM(
+                "TFT Serial Debug: File open failed... J21");
+        }
+    }
+    ANYCUBIC_SERIAL_ENTER();
+
+#endif
+}
+
+void AnycubicTFTClass::doStartPrinting() {
+#ifdef SDSUPPORT
+    if (isPrinterReadyForCmd() && card.isFileOpen()) {
+        ai3m_pause_state = 0;
+        ANYCUBIC_TFT_DEBUG_ECHOLNPGM("DEBUG: AI3M Pause State: 0");
+        StartPrint();
+        IsParked = false;
+        ANYCUBIC_SERIAL_PROTOCOLLNPGM("J04");  // J04 Starting Print
+        ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Serial Debug: Starting SD Print... J04");
+    }
+#endif
+}
+
+void AnycubicTFTClass::doSetHotEndTemp() {
+    unsigned int tempvalue;
+    if (CodeSeen('S')) {
+        tempvalue = constrain(CodeValue(), 0, 275);
+        thermalManager.setTargetHotend(tempvalue, 0);
+    } else if (CodeSeen('C') && (!planner.movesplanned())) {
+        raiseZAxisIfNeeded();
+        tempvalue = constrain(CodeValue(), 0, 275);
+        thermalManager.setTargetHotend(tempvalue, 0);
+    }
+}
+
+void AnycubicTFTClass::doSetHotBedTemp() {
+    if (CodeSeen('S')) {
+        unsigned int tempbed = constrain(CodeValue(), 0, 150);
+        thermalManager.setTargetBed(tempbed);
+    }
+}
+
+void AnycubicTFTClass::doSetFanSpeed() {
+    if (CodeSeen('S')) {
+        unsigned int temp = (CodeValue() * 255 / 100);
+        temp = constrain(temp, 0, 255);
+        fanSpeeds[0] = temp;
+    } else {
+        fanSpeeds[0] = 255;
+    }
+    ANYCUBIC_SERIAL_ENTER();
+}
+
+void AnycubicTFTClass::doStopSteppers() {
+#ifdef SDSUPPORT
+    if ((!planner.movesplanned()) && (!card.sdprinting)) {
+#else
+    if (!planner.movesplanned()) {
+#endif
+        quickstop_stepper();
+        disable_X();
+        disable_Y();
+        disable_Z();
+        disable_E0();
+    }
+    ANYCUBIC_SERIAL_ENTER();
+}
+
+void AnycubicTFTClass::doReportPrintingSpeed() {
+    if (CodeSeen('S')) {
+        feedrate_percentage = constrain(CodeValue(), 40, 999);
+    } else {
+        ANYCUBIC_SERIAL_PROTOCOLPGM("A20V ");
+        ANYCUBIC_SERIAL_PROTOCOLLN(feedrate_percentage);
+    }
+}
+
+void AnycubicTFTClass::doHomePrinter() {
+    if (isPrinterReadyForCmd()) {
+        if (CodeSeen('C')) {
+            enqueue_and_echo_commands_P(PSTR("G28"));
+        } else {
+            if (CodeSeen('X')) enqueue_and_echo_commands_P(PSTR("G28 X"));
+            if (CodeSeen('Y')) enqueue_and_echo_commands_P(PSTR("G28 Y"));
+            if (CodeSeen('Z')) enqueue_and_echo_commands_P(PSTR("G28 Z"));
+        }
+    }
+}
+
+void AnycubicTFTClass::doMoveXYZorExtrude() {
+    if (isPrinterReadyForCmd()) {
+        float coorvalue;
+        unsigned int movespeed = 0;
+        char value[30];
+        if (CodeSeen('F')) {  // Set feedrate
+            movespeed = CodeValue();
+        }
+
+        enqueue_and_echo_commands_P(PSTR("G91"));  // relative coordinates
+
+        if (CodeSeen('X')) {  // Move in X direction
+            coorvalue = CodeValue();
+            if ((coorvalue <= 0.2) && coorvalue > 0) {
+                sprintf_P(value, PSTR("G1 X0.1F%i"), movespeed);
+            } else if ((coorvalue <= -0.1) && coorvalue > -1) {
+                sprintf_P(value, PSTR("G1 X-0.1F%i"), movespeed);
+            } else {
+                sprintf_P(value, PSTR("G1 X%iF%i"), int(coorvalue), movespeed);
+            }
+            enqueue_and_echo_command(value);
+        } else if (CodeSeen('Y')) {  // Move in Y direction
+            coorvalue = CodeValue();
+            if ((coorvalue <= 0.2) && coorvalue > 0) {
+                sprintf_P(value, PSTR("G1 Y0.1F%i"), movespeed);
+            } else if ((coorvalue <= -0.1) && coorvalue > -1) {
+                sprintf_P(value, PSTR("G1 Y-0.1F%i"), movespeed);
+            } else {
+                sprintf_P(value, PSTR("G1 Y%iF%i"), int(coorvalue), movespeed);
+            }
+            enqueue_and_echo_command(value);
+        } else if (CodeSeen('Z')) {  // Move in Z direction
+            coorvalue = CodeValue();
+            if ((coorvalue <= 0.2) && coorvalue > 0) {
+                sprintf_P(value, PSTR("G1 Z0.1F%i"), movespeed);
+            } else if ((coorvalue <= -0.1) && coorvalue > -1) {
+                sprintf_P(value, PSTR("G1 Z-0.1F%i"), movespeed);
+            } else {
+                sprintf_P(value, PSTR("G1 Z%iF%i"), int(coorvalue), movespeed);
+            }
+            enqueue_and_echo_command(value);
+        } else if (CodeSeen('E')) {  // Extrude
+            coorvalue = CodeValue();
+            if ((coorvalue <= 0.2) && coorvalue > 0) {
+                sprintf_P(value, PSTR("G1 E0.1F%i"), movespeed);
+            } else if ((coorvalue <= -0.1) && coorvalue > -1) {
+                sprintf_P(value, PSTR("G1 E-0.1F%i"), movespeed);
+            } else {
+                sprintf_P(value, PSTR("G1 E%iF500"), int(coorvalue));
+            }
+            enqueue_and_echo_command(value);
+        }
+        enqueue_and_echo_commands_P(PSTR("G90"));  // absolute coordinates
+    }
+    ANYCUBIC_SERIAL_ENTER();
+}
+
+void AnycubicTFTClass::doPreHeatPrinter(const int16_t celsiusBed, const int16_t celsiusHotEnd, const uint8_t hotEnd2) {
+    if (isPrinterReadyForCmd()) {
+        raiseZAxisIfNeeded();  // RAISE Z AXIS
+        thermalManager.setTargetBed(celsiusBed);
+        thermalManager.setTargetHotend(celsiusHotEnd, hotEnd2);
+        ANYCUBIC_SERIAL_SUCC_START;
+        ANYCUBIC_SERIAL_ENTER();
+    }
+}
+
+void AnycubicTFTClass::doPrinterCoolDown() {
+    if (isPrinterReadyForCmd()) {
+        thermalManager.setTargetHotend(0, 0);
+        thermalManager.setTargetBed(0);
+        ANYCUBIC_SERIAL_PROTOCOLLNPGM("J12");  // J12 cool down
+        ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Serial Debug: Cooling down... J12");
+    }
+}
+
+void AnycubicTFTClass::doAssistLeveling() {
+    if (CodeSeen('S')) {
+        ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Entering level menue...");
+    } else if (CodeSeen('O')) {
+        ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Leveling started and movint to front left...");
+        enqueue_and_echo_commands_P(PSTR("G91\nG1 Z10 F240\nG90\nG28\nG29\nG1 X20 Y20 F6000\nG1 Z0 F240"));
+    } else if (CodeSeen('T')) {
+        ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Level checkpoint front right...");
+        enqueue_and_echo_commands_P(PSTR("G1 Z5 F240\nG1 X190 Y20 F6000\nG1 Z0 F240"));
+    } else if (CodeSeen('C')) {
+        ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Level checkpoint back right...");
+        enqueue_and_echo_commands_P(PSTR("G1 Z5 F240\nG1 X190 Y190 F6000\nG1 Z0 F240"));
+    } else if (CodeSeen('Q')) {
+        ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Level checkpoint back right...");
+        enqueue_and_echo_commands_P(PSTR("G1 Z5 F240\nG1 X190 Y20 F6000\nG1 Z0 F240"));
+    } else if (CodeSeen('H')) {
+        ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Level check no heating...");
+        // enqueue_and_echo_commands_P(PSTR("... TBD ..."));
+        ANYCUBIC_SERIAL_PROTOCOLLNPGM("J22");  // J22 Test print done
+        ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Serial Debug: Leveling print test done... J22");
+    } else if (CodeSeen('L')) {
+        ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Level check heating...");
+        // enqueue_and_echo_commands_P(PSTR("... TBD ..."));
+        ANYCUBIC_SERIAL_PROTOCOLLNPGM("J22");  // J22 Test print done
+        ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Serial Debug: Leveling print test with heating done... J22");
+    }
+    ANYCUBIC_SERIAL_SUCC_START;
+    ANYCUBIC_SERIAL_ENTER();
+}
+
+void AnycubicTFTClass::doZOffset() {
+#if HAS_BED_PROBE
+    if (isPrinterReadyForCmd()) {
+        char value[30];
+        char *s_zoffset;
+        // if((current_position[Z_AXIS]<10))
+        //  z_offset_auto_test();
+
+        if (CodeSeen('S')) {
+            ANYCUBIC_SERIAL_PROTOCOLPGM("A9V ");
+            ANYCUBIC_SERIAL_PROTOCOL(
+                itostr3(int(zprobe_zoffset * 100.00 + 0.5)));
+            ANYCUBIC_SERIAL_ENTER();
+            ANYCUBIC_TFT_DEBUG_ECHOPGM(
+                "TFT sending current z-probe offset data... <\r\nA9V ");
+            ANYCUBIC_TFT_DEBUG_ECHO(
+                itostr3(int(zprobe_zoffset * 100.00 + 0.5)));
+            ANYCUBIC_TFT_DEBUG_ECHOLNPGM(">");
+        }
+        if (CodeSeen('D')) {
+            s_zoffset = ftostr32(float(CodeValue()) / 100.0);
+            sprintf_P(value, PSTR("M851 Z"));
+            strcat(value, s_zoffset);
+            enqueue_and_echo_command(value);            // Apply Z-Probe offset
+            enqueue_and_echo_commands_P(PSTR("M500"));  // Save to EEPROM
+        }
+    }
+#endif
+    ANYCUBIC_SERIAL_ENTER();
+}
+
+void AnycubicTFTClass::doCleanLevelingBeepFlag(){
+    if (CodeSeen('S')) {
+        ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Level saving data...");
+        enqueue_and_echo_commands_P(PSTR("M500\nM420 S1\nG1 Z10 F240\nG1 X0 Y0 F6000"));
+        ANYCUBIC_SERIAL_SUCC_START;
+        ANYCUBIC_SERIAL_ENTER();
+    }
+}
+
+bool AnycubicTFTClass::isPrinterReadyForCmd() {
+    return (!planner.movesplanned()) &&
+           (TFTstate != ANYCUBIC_TFT_STATE_SD_PAUSE) &&
+           (TFTstate != ANYCUBIC_TFT_STATE_SD_OUTAGE);
+}
+
+void AnycubicTFTClass::raiseZAxisIfNeeded() {
+    if (current_position[Z_AXIS] < 10) {
+        enqueue_and_echo_commands_P(PSTR("G1 Z10"));  // RASE Z AXIS
+    }
+}
+
+void AnycubicTFTClass::CommandScan() {
   CheckHeaterError();
   CheckSDCardChange();
   StateHandler();
 
-  if(TFTbuflen<(TFTBUFSIZE-1))
-  GetCommandFromTFT();
-  if(TFTbuflen)
-  {
+  if(TFTbuflen<(TFTBUFSIZE-1)) {
+      GetCommandFromTFT();
+  }
+
+  if(TFTbuflen) {
     TFTbuflen = (TFTbuflen-1);
     TFTbufindr = (TFTbufindr + 1)%TFTBUFSIZE;
   }
@@ -1188,7 +1243,7 @@ void AnycubicTFTClass::HeatingDone()
   ANYCUBIC_SERIAL_PROTOCOLLNPGM("J07"); // J07 hotend heating done
   ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Serial Debug: Nozzle heating is done... J07");
 
-  if(TFTstate==ANYCUBIC_TFT_STATE_SDPRINT)
+  if(TFTstate==ANYCUBIC_TFT_STATE_SD_PRINT)
   {
     ANYCUBIC_SERIAL_PROTOCOLLNPGM("J04"); // J04 printing from sd card
     ANYCUBIC_TFT_DEBUG_ECHOLNPGM("TFT Serial Debug: Continuing SD print after heating... J04");
