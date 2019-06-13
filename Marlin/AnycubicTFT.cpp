@@ -399,30 +399,30 @@ void AnycubicTFTClass::ls() {
   if (SpecialMenu) {
     switch (filenumber) {
       case 0: // First Page
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Z Up 0.1>\r\n<Z Up 0.1>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Z Up 0.02>\r\n<Z Up 0.02>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Z Down 0.02>\r\n<Z Down 0.02>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Z Down 0.1>\r\n<Z Down 0.1>");
-      break;
+          ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Z Up 0.1>\r\n<Z Up 0.1>");
+          ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Z Up 0.02>\r\n<Z Up 0.02>");
+          ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Z Down 0.02>\r\n<Z Down 0.02>");
+          ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Z Down 0.1>\r\n<Z Down 0.1>");
+          break;
 
       case 4: // Second Page
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Preheat bed>\r\n<Preheat bed>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Start Mesh Leveling>\r\n<Start Mesh Leveling>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Next Mesh Point>\r\n<Next Mesh Point>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Save EEPROM>\r\n<Save EEPROM>");
-      break;
+          ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Preheat bed>\r\n<Preheat bed>");
+          ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Start Mesh Leveling>\r\n<Start Mesh Leveling>");
+          ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Next Mesh Point>\r\n<Next Mesh Point>");
+          ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Save EEPROM>\r\n<Save EEPROM>");
+          break;
 
       case 8: // Third Page
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Exit>\r\n<Exit>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Auto Tune Hotend PID>\r\n<Auto Tune Hotend PID>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Auto Tune Hotbed PID>\r\n<Auto Tune Hotbed PID>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Load FW Defaults>\r\n<Load FW Defaults>");
+        ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Exit>\r\n<Exit>");
+        ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Auto Tune Hotend PID>\r\n<Auto Tune Hotend PID>");
+        ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Auto Tune Hotbed PID>\r\n<Auto Tune Hotbed PID>");
+        ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Load FW Defaults>\r\n<Load FW Defaults>");
       break;
 
       case 12: // Fourth Page
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<FilamentChange Pause>\r\n<FilamentChange Pause>");
-      ANYCUBIC_SERIAL_PROTOCOLLNPGM("<FilamentChange Resume>\r\n<FilamentChange Resume>");
-      break;
+        ANYCUBIC_SERIAL_PROTOCOLLNPGM("<FilamentChange Pause>\r\n<FilamentChange Pause>");
+        ANYCUBIC_SERIAL_PROTOCOLLNPGM("<FilamentChange Resume>\r\n<FilamentChange Resume>");
+        break;
 
       default:
       break;
@@ -431,40 +431,56 @@ void AnycubicTFTClass::ls() {
   #ifdef SDSUPPORT
     else if(card.cardOK) {
       uint16_t max_files;
-      uint16_t dir_files=card.getnrfilenames(); //recursevly reads and counts number of files and directories on SD card
+      uint16_t dir_files=card.getnrfilenames(); //recursevly reads and counts number of files and directories on current dir
 
-      if ((dir_files - filenumber) < 4) {   //if selected fi are more than 4 directories
+      //filenumber is reported by TFT
+      if ((dir_files - filenumber) < 4) {   //if requested filenumber is smaller by 4 than total number of files on sd
+      //i.e. we are not on the last page
           max_files = dir_files;
       } else {
+        //we are on the last page; will have to report some empty files???
           max_files = filenumber + 3;
       }
 
       for(uint16_t cnt=filenumber; cnt<=max_files; cnt++) {
         if (cnt==0) {// Special Entry
           if(strcmp(card.getWorkDirName(),"/") == 0) {        //shows that we are in the root folder
-            ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Special Menu>\r\n<Special Menu>");
-            SERIAL_PROTOCOL(cnt);
-            SERIAL_PROTOCOLLNPGM("<Special_Menu>");
+              ANYCUBIC_SERIAL_PROTOCOLLNPGM("<Special Menu>\r\n<Special Menu>");
+              SERIAL_PROTOCOL(cnt);
+              SERIAL_PROTOCOLLNPGM("<Special_Menu>");
           } else {                                          //shows, that we are in subfolder -- it is possible to go up
-            ANYCUBIC_SERIAL_PROTOCOLLNPGM("/..\r\n/..");
-            SERIAL_PROTOCOL(cnt);
-            SERIAL_PROTOCOLLNPGM("/..");
+              ANYCUBIC_SERIAL_PROTOCOLLNPGM("/..\r\n/..");
+              //this is debug log 
+              SERIAL_PROTOCOL(cnt);
+              SERIAL_PROTOCOLLNPGM("/..");
           }
+        } else if (cnt > dir_files) {
+            card.getfilename(cnt-1);
+            ANYCUBIC_SERIAL_PROTOCOLLN(card.filename);
+            ANYCUBIC_SERIAL_PROTOCOLLN(card.longFilename);
+            //this is debug log :
+            SERIAL_PROTOCOL(cnt);
+            SERIAL_PROTOCOLLN(card.longFilename);
+            SERIAL_PROTOCOLPGM("Too many files requested");
         } else {
           card.getfilename(cnt-1);
           //      card.getfilename(cnt);
 
           if(card.filenameIsDir) {
+            SERIAL_PROTOCOL(cnt);
+            SERIAL_PROTOCOLLN(card.longFilename);
             ANYCUBIC_SERIAL_PROTOCOLPGM("/");
             ANYCUBIC_SERIAL_PROTOCOLLN(card.filename);
             ANYCUBIC_SERIAL_PROTOCOLPGM("/");
             ANYCUBIC_SERIAL_PROTOCOLLN(card.longFilename);
+            //this is debug log :
             SERIAL_PROTOCOL(cnt);
             SERIAL_PROTOCOLPGM("/");
             SERIAL_PROTOCOLLN(card.longFilename);
           } else {
             ANYCUBIC_SERIAL_PROTOCOLLN(card.filename);
             ANYCUBIC_SERIAL_PROTOCOLLN(card.longFilename);
+            //this is debug log :
             SERIAL_PROTOCOL(cnt);
             SERIAL_PROTOCOLLN(card.longFilename);
           }
